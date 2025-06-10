@@ -193,4 +193,3 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 .python-version
-uv.lock
