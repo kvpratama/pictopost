@@ -1,6 +1,0 @@
-langchain>=0.3.25
-langchain-google-genai>=2.1.5
-langgraph>=0.4.8
-pillow>=11.2.1
-pillow-heif>=0.22.0
-streamlit>=1.45.1
