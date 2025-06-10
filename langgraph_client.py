@@ -1,7 +1,7 @@
 import json
 import logging
 import uuid
-from graph import graph_memory
+from graph import get_graph
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -27,7 +27,8 @@ class LangGraphLocalClient:
         logger.info("Starting graph execution")
         logger.debug(f"Thread: {self.config}")
         logger.debug(f"Input data: {json.dumps(input_data, indent=2)}")
-        response = graph_memory.invoke(input_data, self.config)
+        graph = get_graph()
+        response = graph.invoke(input_data, self.config)
         return response
     
     def run_graph_resume(self, input_data):
@@ -36,8 +37,9 @@ class LangGraphLocalClient:
         logger.debug(f"Thread: {self.config}")
         logger.debug(f"Resume data: {json.dumps(input_data, indent=2)}")
         
-        graph_memory.update_state(self.config, input_data)
-        response = graph_memory.invoke(None, self.config)
+        graph = get_graph()
+        graph.update_state(self.config, input_data)
+        response = graph.invoke(None, self.config)
         return response
 
     def run_graph_stream(self, input_data):
@@ -46,7 +48,8 @@ class LangGraphLocalClient:
         logger.debug(f"Thread: {self.config}")
         logger.debug(f"Input data: {json.dumps(input_data, indent=2)}")
         
-        for event in graph_memory.stream(None, self.config, subgraphs=True, stream_mode="updates"):
+        graph = get_graph()
+        for event in graph.stream(None, self.config, subgraphs=True, stream_mode="updates"):
             _, data = event  # event[1] → data
             if data.get('generate_question', ''):
                 question = data.get('generate_question', '')["messages"][0].content
@@ -63,5 +66,6 @@ class LangGraphLocalClient:
 
     def get_state(self):
         """Get the current state of the thread"""
-        state_data = graph_memory.get_state(self.config)[0]
+        graph = get_graph()
+        state_data = graph.get_state(self.config)[0]
         return state_data
