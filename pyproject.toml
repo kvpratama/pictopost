@@ -12,3 +12,6 @@ dependencies = [
     "pillow-heif>=0.22.0",
     "streamlit>=1.45.1",
 ]
+[tool.poetry]
+package-mode = false
+
