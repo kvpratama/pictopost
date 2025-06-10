@@ -1,5 +1,5 @@
 from langgraph.graph import MessagesState
-from pydantic import BaseModel
+from typing import TypedDict
 from operator import add
 from typing import List, Annotated
 
@@ -9,7 +9,11 @@ class GraphState(MessagesState):
     resized_images: Annotated[List[str], add]
     image_descriptions: Annotated[List[str], add]
 
-class ResizeImageState(BaseModel):
+class ImageProcessingInputState(TypedDict):
     image_path: str
     max_size: int
     resized_images: List[str]
+
+class ImageProcessingOutputState(TypedDict):
+    resized_images: List[str]
+    image_descriptions: List[str]
