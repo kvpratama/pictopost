@@ -1,20 +1,28 @@
 from langgraph.graph import START, END, StateGraph
 from state import GraphState, ImageProcessingInputState, ImageProcessingOutputState
-from nodes import initiate_image_processing, human_feedback, resize_image, describe_image, write_blog_post
+from nodes import initiate_image_processing, human_feedback, resize_image, describe_image, write_blog_post, editor_feedback, refine_blog_post, init_node
 from langgraph.checkpoint.memory import MemorySaver
 
 def get_graph():
     builder = StateGraph(GraphState)
-    builder.add_node("initiate_image_processing", initiate_image_processing)
+    # builder.add_node("init_node", init_node)
+    # builder.add_node("initiate_image_processing", initiate_image_processing)
     builder.add_node("image_processing", get_image_processing_builder().compile())
     builder.add_node("human_feedback", human_feedback)
     builder.add_node("write_blog_post", write_blog_post)
+    builder.add_node("editor_feedback", editor_feedback)
+    builder.add_node("refine_blog_post", refine_blog_post)
 
     # Logic
+    # builder.add_edge(START, "init_node")
+    # builder.add_conditional_edges("init_node", initiate_image_processing, ["image_processing"])
     builder.add_conditional_edges(START, initiate_image_processing, ["image_processing"])
+    # builder.add_edge("initiate_image_processing", "image_processing")
     builder.add_edge("image_processing", "human_feedback")
     builder.add_edge("human_feedback", "write_blog_post")
-    builder.add_edge("write_blog_post", END)
+    builder.add_edge("write_blog_post", "editor_feedback")
+    builder.add_edge("editor_feedback", "refine_blog_post")
+    builder.add_edge("refine_blog_post", END)
 
     # Compile
     memory = MemorySaver()

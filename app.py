@@ -53,13 +53,15 @@ else:
         col1.image(thumb, caption=f"Image {idx+1}", use_container_width=True)
         col2.markdown(desc)
     
-    text_area = st.text_area("Additional Context", "")
-    if st.button("Start Writing Process"):
-        logger.info("Starting writing process...")
-        input_data = {
-            "additional_context": text_area,
+    if "blog_post" not in st.session_state["response"]:
+        text_area = st.text_area("Additional Context", "")
+        if st.button("Start Writing Process"):
+            logger.info("Starting writing process...")
+            input_data = {
+                "additional_context": text_area,
         }
-        with st.spinner("Writing blog post..."):
-            st.session_state["response"] = st.session_state["client"].run_graph_resume(input_data=input_data)
+            with st.spinner("Writing blog post..."):
+                st.session_state["response"] = st.session_state["client"].run_graph_resume(input_data=input_data)
 
+    if "blog_post" in st.session_state["response"] and st.session_state["response"]["blog_post"]:
         st.markdown(st.session_state["response"]["blog_post"])

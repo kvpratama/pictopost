@@ -102,10 +102,42 @@ def write_blog_post(state: GraphState, config: dict):
     additional_context = state["additional_context"]
     google_api_key = config["configurable"]["google_api_key"]
 
-    # Initialize the Gemini model
-    llm = get_gemma12b_llm(google_api_key=google_api_key)
     blogger_instruction = load_prompt("blogger_instruction")
     system_message = blogger_instruction.format(images_description=images_description, additional_context=additional_context)
+    llm = get_gemma12b_llm(google_api_key=google_api_key)
     response = llm.invoke([HumanMessage(content=system_message)])
+    response.name = "writer"
+
     logger.info(f"Blog post: {response.content}")
-    return {"blog_post": response.content}
+    return {"blog_post": response.content, "messages": [HumanMessage(content=system_message), AIMessage(content=response.content)]}
+
+
+def editor_feedback(state: GraphState, config: dict):
+    """ No-op node that should be interrupted on """
+    logger.info("Editor feedback")
+    google_api_key = config["configurable"]["google_api_key"]
+
+    editor_instruction = load_prompt("editor_instruction")
+    system_message = editor_instruction.format(blog_post=state["blog_post"])
+    llm = get_gemma27b_llm(google_api_key=google_api_key)
+    response = llm.invoke([HumanMessage(content=system_message)])
+    response.name = "editor"
+
+    logger.info(f"Editor feedback: {response.content}")
+    return {"messages": [HumanMessage(content=response.content)]}
+
+
+def refine_blog_post(state: GraphState, config: dict):
+    """ """
+    logger.info("Refining blog post")
+    google_api_key = config["configurable"]["google_api_key"]
+
+    # refine_instruction = load_prompt("refine_instruction")
+    # system_message = refine_instruction.format(blog_post=state["blog_post"])
+    llm = get_gemma12b_llm(google_api_key=google_api_key)
+    instruction = HumanMessage(content="Refine the blog post based on the editor's feedback")
+    response = llm.invoke(state["messages"] + [instruction])
+    response.name = "refiner"
+
+    logger.info(f"Refined blog post: {response.content}")
+    return {"blog_post": response.content, "messages": [response]}
