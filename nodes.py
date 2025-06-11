@@ -3,7 +3,6 @@ import os
 import logging
 import time
 from langchain_core.messages import AnyMessage, HumanMessage, AIMessage, SystemMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
 from state import GraphState, ImageProcessingInputState
 from PIL import Image
 from prompts import load_prompt
@@ -12,6 +11,7 @@ import pillow_heif  # Add HEIF support
 # Register HEIF plugin with PIL
 pillow_heif.register_heif_opener()
 from llm_model import get_gemma27b_llm, get_gemma12b_llm
+from langgraph.config import get_stream_writer
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +98,8 @@ def human_feedback(state: GraphState, config: dict):
 def write_blog_post(state: GraphState, config: dict):
     """ """
     logger.info("Writing blog post")
+    stream_writer = get_stream_writer()
+    stream_writer({"custom_key": "*Writing blog post...*\n"})
     images_description = "\n".join(state["image_descriptions"])
     additional_context = state["additional_context"]
     google_api_key = config["configurable"]["google_api_key"]
@@ -109,12 +111,15 @@ def write_blog_post(state: GraphState, config: dict):
     response.name = "writer"
 
     logger.info(f"Blog post: {response.content}")
+    stream_writer({"custom_key": "*Post written by the blogger*:\n" + response.content})
     return {"blog_post": response.content, "messages": [HumanMessage(content=system_message), AIMessage(content=response.content)]}
 
 
 def editor_feedback(state: GraphState, config: dict):
     """ No-op node that should be interrupted on """
     logger.info("Editor feedback")
+    stream_writer = get_stream_writer()
+    stream_writer({"custom_key": "*Editor is reading content...*\n"})
     google_api_key = config["configurable"]["google_api_key"]
 
     editor_instruction = load_prompt("editor_instruction")
@@ -124,6 +129,7 @@ def editor_feedback(state: GraphState, config: dict):
     response.name = "editor"
 
     logger.info(f"Editor feedback: {response.content}")
+    stream_writer({"custom_key": "*Editor's feedback*:\n" + response.content})
     return {"messages": [HumanMessage(content=response.content)]}
 
 
@@ -131,6 +137,8 @@ def refine_blog_post(state: GraphState, config: dict):
     """ """
     logger.info("Refining blog post")
     google_api_key = config["configurable"]["google_api_key"]
+    stream_writer = get_stream_writer()
+    stream_writer({"custom_key": "*Refining content based on editor's feedback...*\n"})
 
     # refine_instruction = load_prompt("refine_instruction")
     # system_message = refine_instruction.format(blog_post=state["blog_post"])
@@ -139,5 +147,6 @@ def refine_blog_post(state: GraphState, config: dict):
     response = llm.invoke(state["messages"] + [instruction])
     response.name = "refiner"
 
-    logger.info(f"Refined blog post: {response.content}")
+    logger.info(f"Refined content: {response.content}")
+    stream_writer({"custom_key": "*Refined content*:\n" + response.content})
     return {"blog_post": response.content, "messages": [response]}

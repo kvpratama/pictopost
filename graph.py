@@ -1,6 +1,6 @@
 from langgraph.graph import START, END, StateGraph
 from state import GraphState, ImageProcessingInputState, ImageProcessingOutputState
-from nodes import initiate_image_processing, human_feedback, resize_image, describe_image, write_blog_post, editor_feedback, refine_blog_post, init_node
+from nodes import initiate_image_processing, human_feedback, resize_image, describe_image, write_blog_post, editor_feedback, refine_blog_post
 from langgraph.checkpoint.memory import MemorySaver
 
 def get_graph():

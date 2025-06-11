@@ -41,26 +41,30 @@ class LangGraphLocalClient:
         response = self.graph.invoke(None, self.config)
         return response
 
-    def run_graph_stream(self, input_data):
+    def run_graph_stream(self, input_data, stream_mode="updates"):
         """Run graph and stream the results"""
         logger.info("Starting graph stream execution")
         logger.debug(f"Thread: {self.config}")
         logger.debug(f"Input data: {json.dumps(input_data, indent=2)}")
+        if input_data:
+            self.graph.update_state(self.config, input_data)
         
-        for event in self.graph.stream(None, self.config, subgraphs=True, stream_mode="updates"):
+        for event in self.graph.stream(None, self.config, subgraphs=True, stream_mode=stream_mode):
             _, data = event  # event[1] → data
-            if data.get('generate_question', ''):
-                question = data.get('generate_question', '')["messages"][0].content
-                logger.info(f"Question: {question}")
-                yield question + "\n\n --- \n\n"
-            if data.get('generate_answer', ''):
-                answer = data.get('generate_answer', '')["messages"][0].content
-                logger.info(f"Answer: {answer}")
-                yield answer + "\n\n --- \n\n"
-            if data.get('write_section', ''):
-                section = data.get('write_section', '')["sections"][0]
-                logger.info(f"Section: {section}")
-                yield section + "\n\n --- \n\n"
+            output = data.get("custom_key", "")
+            yield output + "\n\n --- \n\n"
+            # if data.get('generate_question', ''):
+            #     question = data.get('generate_question', '')["messages"][0].content
+            #     logger.info(f"Question: {question}")
+            #     yield question + "\n\n --- \n\n"
+            # if data.get('generate_answer', ''):
+            #     answer = data.get('generate_answer', '')["messages"][0].content
+            #     logger.info(f"Answer: {answer}")
+            #     yield answer + "\n\n --- \n\n"
+            # if data.get('write_section', ''):
+            #     section = data.get('write_section', '')["sections"][0]
+            #     logger.info(f"Section: {section}")
+            #     yield section + "\n\n --- \n\n"
 
     def get_state(self):
         """Get the current state of the thread"""
