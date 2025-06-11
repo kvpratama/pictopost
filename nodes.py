@@ -112,7 +112,7 @@ def write_blog_post(state: GraphState, config: dict):
 
     logger.info(f"Blog post: {response.content}")
     stream_writer({"custom_key": "*Post written by the blogger*:\n" + response.content})
-    return {"blog_post": response.content, "messages": [HumanMessage(content=system_message), AIMessage(content=response.content)]}
+    return {"blog_post": response.content, "messages": [response]}
 
 
 def editor_feedback(state: GraphState, config: dict):
@@ -126,11 +126,12 @@ def editor_feedback(state: GraphState, config: dict):
     system_message = editor_instruction.format(blog_post=state["blog_post"])
     llm = get_gemma27b_llm(google_api_key=google_api_key)
     response = llm.invoke([HumanMessage(content=system_message)])
-    response.name = "editor"
 
     logger.info(f"Editor feedback: {response.content}")
-    stream_writer({"custom_key": "*Editor's feedback*:\n" + response.content})
-    return {"messages": [HumanMessage(content=response.content)]}
+    editor_message = HumanMessage(content=response.content)
+    editor_message.name = "editor"
+    stream_writer({"custom_key": "*Editor's feedback*:\n" + editor_message.content})
+    return {"messages": [editor_message]}
 
 
 def refine_blog_post(state: GraphState, config: dict):
@@ -150,3 +151,29 @@ def refine_blog_post(state: GraphState, config: dict):
     logger.info(f"Refined content: {response.content}")
     stream_writer({"custom_key": "*Refined content*:\n" + response.content})
     return {"blog_post": response.content, "messages": [response]}
+
+
+def writing_flow_control(state: GraphState, config: dict):
+    """ """
+    logger.info("Writing flow control")
+    stream_writer = get_stream_writer()
+    stream_writer({"custom_key": "*Deciding on next step...*\n"})
+
+    messages = state["messages"]
+    max_num_turns = state.get('max_num_turns', 2)
+
+    num_responses = len(
+            [m for m in messages if isinstance(m, AIMessage) and m.name == "refiner"]
+        )
+
+    logger.info(f"Number of responses: {num_responses}/{max_num_turns}")
+    stream_writer({"custom_key": f"*Number of responses: {num_responses}/{max_num_turns}*\n"})
+
+    if num_responses >= max_num_turns:
+        logger.info("Reached maximum number of turns")
+        stream_writer({"custom_key": "*Reached maximum number of turns*\n *Finishing Writing Process...*\n"})
+        return "human_content_feedback"
+
+    logger.info("Continuing Writing Process")
+    stream_writer({"custom_key": "*Continuing Writing Process...*\n"})
+    return "editor_feedback"
