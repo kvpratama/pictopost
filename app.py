@@ -78,5 +78,6 @@ else:
                     st.write_stream(st.session_state["client"].run_graph_stream(input_data=input_data, stream_mode="custom"))
             st.session_state["response"] = st.session_state["client"].get_state()
             st.markdown(st.session_state["response"]["translated_content"])
+            st.markdown(st.session_state["response"]["localized_content"])
             # st.rerun()
             

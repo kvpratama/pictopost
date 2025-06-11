@@ -111,7 +111,7 @@ def write_blog_post(state: GraphState, config: dict):
     response.name = "writer"
 
     logger.info(f"Blog post: {response.content}")
-    stream_writer({"custom_key": "*Post written by the blogger*:\n" + response.content})
+    stream_writer({"custom_key": "*Post written*:\n" + response.content})
     return {"blog_post": response.content, "messages": [response]}
 
 
@@ -141,8 +141,6 @@ def refine_blog_post(state: GraphState, config: dict):
     stream_writer = get_stream_writer()
     stream_writer({"custom_key": "*Refining content based on editor's feedback...*\n"})
 
-    # refine_instruction = load_prompt("refine_instruction")
-    # system_message = refine_instruction.format(blog_post=state["blog_post"])
     llm = get_gemma12b_llm(google_api_key=google_api_key)
     instruction = HumanMessage(content="Refine the blog post based on the editor's feedback")
     response = llm.invoke(state["messages"] + [instruction])
@@ -196,6 +194,24 @@ def translate_content(state: GraphState, config: dict):
 
     logger.info(f"Translated content: {response.content}")
     stream_writer({"custom_key": "*Translated content*:\n" + response.content})
-    return {"translated_content": response.content, "messages": [response]}
+    return {"translated_content": response.content}
 
-    
+
+def localize_content(state: GraphState, config: dict):
+    """ """
+    logger.info("Localizing content")
+    stream_writer = get_stream_writer()
+    stream_writer({"custom_key": "*Localizing content...*\n"})
+
+    google_api_key = config["configurable"]["google_api_key"]
+
+    localized_instruction = load_prompt("localizer_instruction")
+    system_message = localized_instruction.format(translated_content=state["translated_content"], target_locale="Indonesian")
+    llm = get_gemma27b_llm(google_api_key=google_api_key)
+    instruction = HumanMessage(content=system_message)
+    response = llm.invoke([instruction])
+    response.name = "localizer"
+
+    logger.info(f"Localized content: {response.content}")
+    stream_writer({"custom_key": "*Localized content*:\n" + response.content})
+    return {"localized_content": response.content}

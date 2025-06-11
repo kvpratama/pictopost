@@ -11,6 +11,7 @@ class GraphState(MessagesState):
     additional_context: str
     blog_post: str
     translated_content: str
+    localized_content: str
 
 class ImageProcessingInputState(TypedDict):
     image_path: str
