@@ -10,6 +10,7 @@ class GraphState(MessagesState):
     image_descriptions: Annotated[List[str], add]
     additional_context: str
     blog_post: str
+    translated_content: str
 
 class ImageProcessingInputState(TypedDict):
     image_path: str

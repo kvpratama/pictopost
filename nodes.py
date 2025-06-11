@@ -177,3 +177,25 @@ def writing_flow_control(state: GraphState, config: dict):
     logger.info("Continuing Writing Process")
     stream_writer({"custom_key": "*Continuing Writing Process...*\n"})
     return "editor_feedback"
+
+
+def translate_content(state: GraphState, config: dict):
+    """ """
+    logger.info("Translating content")
+    stream_writer = get_stream_writer()
+    stream_writer({"custom_key": "*Translating content...*\n"})
+
+    google_api_key = config["configurable"]["google_api_key"]
+
+    translator_instruction = load_prompt("translator_instruction")
+    system_message = translator_instruction.format(content=state["blog_post"], target_language="Indonesian")
+    llm = get_gemma27b_llm(google_api_key=google_api_key)
+    instruction = HumanMessage(content=system_message)
+    response = llm.invoke([instruction])
+    response.name = "translator"
+
+    logger.info(f"Translated content: {response.content}")
+    stream_writer({"custom_key": "*Translated content*:\n" + response.content})
+    return {"translated_content": response.content, "messages": [response]}
+
+    

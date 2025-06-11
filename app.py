@@ -68,3 +68,15 @@ else:
             # st.rerun()
     if "blog_post" in st.session_state["response"] and st.session_state["response"]["blog_post"]:
         st.markdown(st.session_state["response"]["blog_post"])
+
+        if st.button("Translate Content"):
+            logger.info("Translating content...")
+            input_data = {}
+            with st.spinner("Translating content..."):
+                # st.session_state["response"] = st.session_state["client"].run_graph_resume(input_data=input_data)
+                with st.container(height=300):
+                    st.write_stream(st.session_state["client"].run_graph_stream(input_data=input_data, stream_mode="custom"))
+            st.session_state["response"] = st.session_state["client"].get_state()
+            st.markdown(st.session_state["response"]["translated_content"])
+            # st.rerun()
+            
