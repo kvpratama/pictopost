@@ -8,17 +8,18 @@ logger = logging.getLogger(__name__)
 
 class LangGraphLocalClient:
     # def __init__(self, google_api_key, tavily_api_key):
-    def __init__(self):
+    def __init__(self, google_api_key):
         logger.info(f"Initializing LangGraphLocalClient")
-        self.config = self.create_config()
+        self.config = self.create_config(google_api_key)
+        self.graph = get_graph()
         logger.debug(f"Client initialized with thread: {self.config}")
         
-    def create_config(self):
+    def create_config(self, google_api_key):
         """Create a new thread with configurable parameters"""
         return {"configurable": 
                     {
                         "thread_id": str(uuid.uuid4()),
-                        # "google_api_key": google_api_key,
+                        "google_api_key": google_api_key,
                     }
                 }
     
@@ -27,8 +28,7 @@ class LangGraphLocalClient:
         logger.info("Starting graph execution")
         logger.debug(f"Thread: {self.config}")
         logger.debug(f"Input data: {json.dumps(input_data, indent=2)}")
-        graph = get_graph()
-        response = graph.invoke(input_data, self.config)
+        response = self.graph.invoke(input_data, self.config)
         return response
     
     def run_graph_resume(self, input_data):
@@ -37,9 +37,8 @@ class LangGraphLocalClient:
         logger.debug(f"Thread: {self.config}")
         logger.debug(f"Resume data: {json.dumps(input_data, indent=2)}")
         
-        graph = get_graph()
-        graph.update_state(self.config, input_data)
-        response = graph.invoke(None, self.config)
+        self.graph.update_state(self.config, input_data)
+        response = self.graph.invoke(None, self.config)
         return response
 
     def run_graph_stream(self, input_data):
@@ -48,8 +47,7 @@ class LangGraphLocalClient:
         logger.debug(f"Thread: {self.config}")
         logger.debug(f"Input data: {json.dumps(input_data, indent=2)}")
         
-        graph = get_graph()
-        for event in graph.stream(None, self.config, subgraphs=True, stream_mode="updates"):
+        for event in self.graph.stream(None, self.config, subgraphs=True, stream_mode="updates"):
             _, data = event  # event[1] → data
             if data.get('generate_question', ''):
                 question = data.get('generate_question', '')["messages"][0].content
@@ -66,6 +64,5 @@ class LangGraphLocalClient:
 
     def get_state(self):
         """Get the current state of the thread"""
-        graph = get_graph()
-        state_data = graph.get_state(self.config)[0]
+        state_data = self.graph.get_state(self.config)[0]
         return state_data

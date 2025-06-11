@@ -1,6 +1,6 @@
 from langgraph.graph import START, END, StateGraph
 from state import GraphState, ImageProcessingInputState, ImageProcessingOutputState
-from nodes import initiate_image_processing, human_feedback, resize_image, describe_image
+from nodes import initiate_image_processing, human_feedback, resize_image, describe_image, write_blog_post
 from langgraph.checkpoint.memory import MemorySaver
 
 def get_graph():
@@ -8,15 +8,17 @@ def get_graph():
     builder.add_node("initiate_image_processing", initiate_image_processing)
     builder.add_node("image_processing", get_image_processing_builder().compile())
     builder.add_node("human_feedback", human_feedback)
+    builder.add_node("write_blog_post", write_blog_post)
 
     # Logic
     builder.add_conditional_edges(START, initiate_image_processing, ["image_processing"])
     builder.add_edge("image_processing", "human_feedback")
-    builder.add_edge("human_feedback", END)
+    builder.add_edge("human_feedback", "write_blog_post")
+    builder.add_edge("write_blog_post", END)
 
     # Compile
     memory = MemorySaver()
-    graph_memory = builder.compile(interrupt_before=['human_feedback'], checkpointer=memory)
+    graph_memory = builder.compile(interrupt_after=['human_feedback'], checkpointer=memory)
     return graph_memory
 
 

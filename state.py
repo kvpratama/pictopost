@@ -8,6 +8,8 @@ class GraphState(MessagesState):
     max_size: int
     resized_images: Annotated[List[str], add]
     image_descriptions: Annotated[List[str], add]
+    additional_context: str
+    blog_post: str
 
 class ImageProcessingInputState(TypedDict):
     image_path: str

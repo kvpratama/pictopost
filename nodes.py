@@ -11,11 +11,12 @@ import base64
 import pillow_heif  # Add HEIF support
 # Register HEIF plugin with PIL
 pillow_heif.register_heif_opener()
+from llm_model import get_gemma27b_llm, get_gemma12b_llm
 
 logger = logging.getLogger(__name__)
 
 
-def initiate_image_processing(state: GraphState):
+def initiate_image_processing(state: GraphState, config: dict):
     """ This is the "map" step where we run each interview sub-graph using Send API """
 
     logger.info(f"Initiating image processing")
@@ -23,7 +24,7 @@ def initiate_image_processing(state: GraphState):
     return [Send("image_processing", {"image_path": image_path, "max_size": state["max_size"]}) for image_path in state["image_paths"]]
 
 
-def resize_image(state: ImageProcessingInputState):
+def resize_image(state: ImageProcessingInputState, config: dict):
     """
     Resize an image so that its longest side does not exceed a specified maximum size.
 
@@ -62,14 +63,15 @@ def resize_image(state: ImageProcessingInputState):
     return {"resized_images": [os.path.splitext(state["image_path"])[0] + "_resized.jpg"]}
 
 
-def describe_image(state: ImageProcessingInputState):
+def describe_image(state: ImageProcessingInputState, config: dict):
     """
     
     """
     logger.info(f"Describing image: {state['resized_images'][0]}")
 
     # Initialize the Gemini model
-    llm = ChatGoogleGenerativeAI(model="gemma-3-27b-it")
+    google_api_key = config["configurable"]["google_api_key"]
+    llm = get_gemma27b_llm(google_api_key=google_api_key)
     # Load and encode local image
     with open(state["resized_images"][0], "rb") as image_file:
         encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
@@ -87,7 +89,23 @@ def describe_image(state: ImageProcessingInputState):
     return {"image_descriptions": [response.content]}
     
 
-def human_feedback(state: GraphState):
+def human_feedback(state: GraphState, config: dict):
     """ No-op node that should be interrupted on """
     logger.info("Human feedback")
     pass
+
+
+def write_blog_post(state: GraphState, config: dict):
+    """ """
+    logger.info("Writing blog post")
+    images_description = "\n".join(state["image_descriptions"])
+    additional_context = state["additional_context"]
+    google_api_key = config["configurable"]["google_api_key"]
+
+    # Initialize the Gemini model
+    llm = get_gemma12b_llm(google_api_key=google_api_key)
+    blogger_instruction = load_prompt("blogger_instruction")
+    system_message = blogger_instruction.format(images_description=images_description, additional_context=additional_context)
+    response = llm.invoke([HumanMessage(content=system_message)])
+    logger.info(f"Blog post: {response.content}")
+    return {"blog_post": response.content}

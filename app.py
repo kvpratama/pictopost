@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 if "client" not in st.session_state:
     logger.info("Initializing LangGraphLocalClient...")
-    st.session_state["client"] = LangGraphLocalClient()
+    google_api_key = os.getenv("GOOGLE_API_KEY")
+    st.session_state["client"] = LangGraphLocalClient(google_api_key)
     st.session_state["response"] = None
 
 st.title("PicToPost")
@@ -51,4 +52,14 @@ else:
         thumb.thumbnail((256, 256))
         col1.image(thumb, caption=f"Image {idx+1}", use_container_width=True)
         col2.markdown(desc)
+    
+    text_area = st.text_area("Additional Context", "")
+    if st.button("Start Writing Process"):
+        logger.info("Starting writing process...")
+        input_data = {
+            "additional_context": text_area,
+        }
+        with st.spinner("Writing blog post..."):
+            st.session_state["response"] = st.session_state["client"].run_graph_resume(input_data=input_data)
 
+        st.markdown(st.session_state["response"]["blog_post"])
