@@ -4,13 +4,12 @@ from nodes import *
 from langgraph.checkpoint.memory import MemorySaver
 from configuration import ConfigSchema
 
+
 def get_graph():
     builder = StateGraph(GraphState, input=GraphStateInput, output=GraphStateOutput, config_schema=ConfigSchema)
     builder.add_node("image_processing", get_image_processing_builder().compile())
     builder.add_node("human_feedback", human_feedback)
-    builder.add_node("write_blog_post", write_blog_post)
-    builder.add_node("editor_feedback", editor_feedback)
-    builder.add_node("refine_blog_post", refine_blog_post)
+    builder.add_node("writing_graph", get_writing_graph_builder().compile())
     builder.add_node("human_content_feedback", human_feedback)
     builder.add_node("translate_content", translate_content)
     builder.add_node("localize_content", localize_content)
@@ -18,10 +17,8 @@ def get_graph():
     # Logic
     builder.add_conditional_edges(START, initiate_image_processing, ["image_processing"])
     builder.add_edge("image_processing", "human_feedback")
-    builder.add_edge("human_feedback", "write_blog_post")
-    builder.add_edge("write_blog_post", "editor_feedback")
-    builder.add_edge("editor_feedback", "refine_blog_post")
-    builder.add_conditional_edges("refine_blog_post", writing_flow_control, ["editor_feedback", "human_content_feedback"])
+    builder.add_edge("human_feedback", "writing_graph")
+    builder.add_edge("writing_graph", "human_content_feedback")
     builder.add_edge("human_content_feedback", "translate_content")
     builder.add_edge("translate_content", "localize_content")
     builder.add_edge("localize_content", END)
@@ -45,7 +42,7 @@ def get_image_processing_builder():
     return builder
 
 
-def get_writing_graph():
+def get_writing_graph_builder():
     builder = StateGraph(WritingState, input=WritingStateInput, output=WritingStateOutput, config_schema=ConfigSchema)
     builder.add_node("write_blog_post", write_blog_post)
     builder.add_node("editor_feedback", editor_feedback)
@@ -58,3 +55,4 @@ def get_writing_graph():
     builder.add_conditional_edges("refine_blog_post", writing_flow_control, ["editor_feedback", END])
 
     return builder
+
