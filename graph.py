@@ -2,9 +2,10 @@ from langgraph.graph import START, END, StateGraph
 from state import GraphState, ImageProcessingInputState, ImageProcessingOutputState
 from nodes import initiate_image_processing, human_feedback, resize_image, describe_image, write_blog_post, editor_feedback, refine_blog_post, writing_flow_control, translate_content, localize_content
 from langgraph.checkpoint.memory import MemorySaver
+from configuration import ConfigSchema
 
 def get_graph():
-    builder = StateGraph(GraphState)
+    builder = StateGraph(GraphState, config_schema=ConfigSchema)
     builder.add_node("image_processing", get_image_processing_builder().compile())
     builder.add_node("human_feedback", human_feedback)
     builder.add_node("write_blog_post", write_blog_post)
