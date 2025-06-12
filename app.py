@@ -9,6 +9,11 @@ from PIL import Image
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+st.set_page_config(
+    page_title="PicToPost",
+    page_icon="📜",
+)
+
 if "client" not in st.session_state:
     logger.info("Initializing LangGraphLocalClient...")
     google_api_key = os.getenv("GOOGLE_API_KEY")
