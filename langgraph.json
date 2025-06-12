@@ -2,7 +2,8 @@
     "dockerfile_lines": [],
     "graphs": {
       "main_graph": "./graph.py:get_graph",
-      "image_processing": "./graph.py:get_image_processing_builder"
+      "image_processing_graph": "./graph.py:get_image_processing_builder",
+      "writing_graph": "./graph.py:get_writting_graph"
     },
     "env": "./.env",
     "python_version": "3.13",

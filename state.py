@@ -30,10 +30,23 @@ class ImageProcessingState(TypedDict):
     max_size: int
     resized_images: List[str]
 
-class ImageProcessingInputState(TypedDict):
+class ImageProcessingStateInput(TypedDict):
     image_path: str
     max_size: int
 
-class ImageProcessingOutputState(TypedDict):
+class ImageProcessingStateOutput(TypedDict):
     resized_images: List[str]
     image_descriptions: List[str]
+
+
+class WritingState(MessagesState):
+    image_descriptions: Annotated[List[str], add]
+    additional_context: str
+    blog_post: str
+
+class WritingStateInput(MessagesState):
+    image_descriptions: Annotated[List[str], add]
+    additional_context: str
+
+class WritingStateOutput(MessagesState):
+    blog_post: str

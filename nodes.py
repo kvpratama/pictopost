@@ -3,7 +3,7 @@ import os
 import logging
 import time
 from langchain_core.messages import AnyMessage, HumanMessage, AIMessage, SystemMessage
-from state import GraphState, ImageProcessingState
+from state import GraphState, ImageProcessingState, WritingState
 from PIL import Image
 from prompts import load_prompt
 import base64
@@ -95,7 +95,7 @@ def human_feedback(state: GraphState, config: dict):
     pass
 
 
-def write_blog_post(state: GraphState, config: dict):
+def write_blog_post(state: WritingState, config: dict):
     """ """
     logger.info("Writing blog post")
     stream_writer = get_stream_writer()
@@ -115,7 +115,7 @@ def write_blog_post(state: GraphState, config: dict):
     return {"blog_post": response.content, "messages": [response]}
 
 
-def editor_feedback(state: GraphState, config: dict):
+def editor_feedback(state: WritingState, config: dict):
     """ No-op node that should be interrupted on """
     logger.info("Editor feedback")
     stream_writer = get_stream_writer()
@@ -134,7 +134,7 @@ def editor_feedback(state: GraphState, config: dict):
     return {"messages": [editor_message]}
 
 
-def refine_blog_post(state: GraphState, config: dict):
+def refine_blog_post(state: WritingState, config: dict):
     """ """
     logger.info("Refining blog post")
     google_api_key = config["configurable"]["google_api_key"]
@@ -151,7 +151,7 @@ def refine_blog_post(state: GraphState, config: dict):
     return {"blog_post": response.content, "messages": [response]}
 
 
-def writing_flow_control(state: GraphState, config: dict):
+def writing_flow_control(state: WritingState, config: dict):
     """ """
     logger.info("Writing flow control")
     stream_writer = get_stream_writer()
@@ -170,7 +170,7 @@ def writing_flow_control(state: GraphState, config: dict):
     if num_responses >= max_num_turns:
         logger.info("Reached maximum number of turns")
         stream_writer({"custom_key": "*Reached maximum number of turns*\n *Finishing Writing Process...*\n"})
-        return "human_content_feedback"
+        return "__end__"
 
     logger.info("Continuing Writing Process")
     stream_writer({"custom_key": "*Continuing Writing Process...*\n"})
