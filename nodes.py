@@ -3,7 +3,7 @@ import os
 import logging
 import time
 from langchain_core.messages import AnyMessage, HumanMessage, AIMessage, SystemMessage
-from state import GraphState, ImageProcessingInputState
+from state import GraphState, ImageProcessingState
 from PIL import Image
 from prompts import load_prompt
 import base64
@@ -24,7 +24,7 @@ def initiate_image_processing(state: GraphState, config: dict):
     return [Send("image_processing", {"image_path": image_path, "max_size": state["max_size"]}) for image_path in state["image_paths"]]
 
 
-def resize_image(state: ImageProcessingInputState, config: dict):
+def resize_image(state: ImageProcessingState, config: dict):
     """
     Resize an image so that its longest side does not exceed a specified maximum size.
 
@@ -63,7 +63,7 @@ def resize_image(state: ImageProcessingInputState, config: dict):
     return {"resized_images": [os.path.splitext(state["image_path"])[0] + "_resized.jpg"]}
 
 
-def describe_image(state: ImageProcessingInputState, config: dict):
+def describe_image(state: ImageProcessingState, config: dict):
     """
     
     """

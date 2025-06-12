@@ -1,11 +1,11 @@
 from langgraph.graph import START, END, StateGraph
-from state import GraphState, ImageProcessingInputState, ImageProcessingOutputState
-from nodes import initiate_image_processing, human_feedback, resize_image, describe_image, write_blog_post, editor_feedback, refine_blog_post, writing_flow_control, translate_content, localize_content
+from state import GraphState, GraphStateInput, GraphStateOutput, ImageProcessingState, ImageProcessingInputState, ImageProcessingOutputState
+from nodes import *
 from langgraph.checkpoint.memory import MemorySaver
 from configuration import ConfigSchema
 
 def get_graph():
-    builder = StateGraph(GraphState, config_schema=ConfigSchema)
+    builder = StateGraph(GraphState, input=GraphStateInput, output=GraphStateOutput, config_schema=ConfigSchema)
     builder.add_node("image_processing", get_image_processing_builder().compile())
     builder.add_node("human_feedback", human_feedback)
     builder.add_node("write_blog_post", write_blog_post)
@@ -33,7 +33,7 @@ def get_graph():
 
 
 def get_image_processing_builder():
-    builder = StateGraph(input=ImageProcessingInputState, output=ImageProcessingOutputState)
+    builder = StateGraph(ImageProcessingState, input=ImageProcessingInputState, output=ImageProcessingOutputState, config_schema=ConfigSchema)
     builder.add_node("resize_image", resize_image)
     builder.add_node("describe_image", describe_image)
 

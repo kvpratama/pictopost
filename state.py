@@ -13,10 +13,26 @@ class GraphState(MessagesState):
     translated_content: str
     localized_content: str
 
-class ImageProcessingInputState(TypedDict):
+class GraphStateInput(MessagesState):
+    image_paths: Annotated[List[str], add]
+    max_size: int
+
+class GraphStateOutput(MessagesState):
+    resized_images: Annotated[List[str], add]
+    image_descriptions: Annotated[List[str], add]
+    additional_context: str
+    blog_post: str
+    translated_content: str
+    localized_content: str
+
+class ImageProcessingState(TypedDict):
     image_path: str
     max_size: int
     resized_images: List[str]
+
+class ImageProcessingInputState(TypedDict):
+    image_path: str
+    max_size: int
 
 class ImageProcessingOutputState(TypedDict):
     resized_images: List[str]
