@@ -25,6 +25,7 @@ class GraphStateOutput(MessagesState):
     translated_content: str
     localized_content: str
 
+
 class ImageProcessingState(TypedDict):
     image_path: str
     max_size: int
@@ -50,3 +51,16 @@ class WritingStateInput(MessagesState):
 
 class WritingStateOutput(MessagesState):
     blog_post: str
+
+
+class TranslationState(MessagesState):
+    blog_post: str
+    translated_content: str
+    localized_content: str
+
+class TranslationStateInput(MessagesState):
+    blog_post: str
+
+class TranslationStateOutput(MessagesState):
+    translated_content: str
+    localized_content: str

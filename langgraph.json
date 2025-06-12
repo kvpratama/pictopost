@@ -3,7 +3,8 @@
     "graphs": {
       "main_graph": "./graph.py:get_graph",
       "image_processing_graph": "./graph.py:get_image_processing_builder",
-      "writing_graph": "./graph.py:get_writting_graph"
+      "writing_graph": "./graph.py:get_writing_graph_builder",
+      "translation_graph": "./graph.py:get_translation_graph_builder"
     },
     "env": "./.env",
     "python_version": "3.13",

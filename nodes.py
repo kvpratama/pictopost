@@ -3,7 +3,7 @@ import os
 import logging
 import time
 from langchain_core.messages import AnyMessage, HumanMessage, AIMessage, SystemMessage
-from state import GraphState, ImageProcessingState, WritingState
+from state import GraphState, ImageProcessingState, WritingState, TranslationState
 from PIL import Image
 from prompts import load_prompt
 import base64
@@ -177,7 +177,7 @@ def writing_flow_control(state: WritingState, config: dict):
     return "editor_feedback"
 
 
-def translate_content(state: GraphState, config: dict):
+def translate_content(state: TranslationState, config: dict):
     """ """
     logger.info("Translating content")
     stream_writer = get_stream_writer()
@@ -197,7 +197,7 @@ def translate_content(state: GraphState, config: dict):
     return {"translated_content": response.content}
 
 
-def localize_content(state: GraphState, config: dict):
+def localize_content(state: TranslationState, config: dict):
     """ """
     logger.info("Localizing content")
     stream_writer = get_stream_writer()
