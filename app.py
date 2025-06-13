@@ -74,7 +74,7 @@ else:
         col1.image(thumb, caption=f"Image {idx+1}", use_container_width=True)
         col2.markdown(desc)
     
-    if "blog_post" not in st.session_state["response"]:
+    if "content" not in st.session_state["response"]:
         text_area = st.text_area("Optional: Additional Context", "")
         if st.button("Start Writing Process"):
             logger.info("Starting writing process...")
@@ -87,18 +87,26 @@ else:
                     st.write_stream(st.session_state["client"].run_graph_stream(input_data=input_data, stream_mode="custom"))
             st.session_state["response"] = st.session_state["client"].get_state()
             # st.rerun()
-    if "blog_post" in st.session_state["response"] and st.session_state["response"]["blog_post"]:
-        st.markdown(st.session_state["response"]["blog_post"])
+    if "content" in st.session_state["response"] and st.session_state["response"]["content"]:
+        with st.expander("Content"):
+            st.markdown(st.session_state["response"]["content"])
+        with st.expander("Caption"):
+            st.markdown(st.session_state["response"]["caption"])
 
-        if st.button("Translate Content"):
-            logger.info("Translating content...")
-            input_data = {}
-            with st.spinner("Translating content..."):
-                # st.session_state["response"] = st.session_state["client"].run_graph_resume(input_data=input_data)
-                with st.container(height=300):
-                    st.write_stream(st.session_state["client"].run_graph_stream(input_data=input_data, stream_mode="custom"))
-            st.session_state["response"] = st.session_state["client"].get_state()
-            st.markdown(st.session_state["response"]["translated_content"])
-            st.markdown(st.session_state["response"]["localized_content"])
-            # st.rerun()
+        # elif "localized_content" not in st.session_state["response"]:
+        if not st.session_state["response"]["localized_content"]:
+            if st.button("Translate Content"):
+                logger.info("Translating content...")
+                input_data = {}
+                with st.spinner("Translating content..."):
+                    with st.container(height=300):
+                        st.write_stream(st.session_state["client"].run_graph_stream(input_data=input_data, stream_mode="custom"))
+                st.session_state["response"] = st.session_state["client"].get_state()
+                st.rerun()
+    
+    if st.session_state["response"]["localized_content"]:
+        for content in st.session_state["response"]["localized_content"]:
+            st.markdown(content)
+            st.markdown("---")
+            
             
