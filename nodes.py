@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def initiate_image_processing(state: GraphState, config: dict):
-    """ This is the "map" step where we run each interview sub-graph using Send API """
+    """ This is the "map" step where we run each image processing sub-graph using Send API """
 
     logger.info(f"Initiating image processing")
     
@@ -111,24 +111,24 @@ def write_blog_post(state: WritingState, config: dict):
     response = llm.invoke([prompt])
     response.name = "writer"
 
-    logger.info(f"Blog post: {response.content}")
-    stream_writer({"custom_key": "*Post written*:\n" + response.content})
-    return {"blog_post": response.content, "messages": [prompt, response]}
+    logger.info(f"Content: {response.content}")
+    stream_writer({"custom_key": "*Content written*:\n" + response.content})
+    return {"content": response.content, "messages": [prompt, response]}
 
 
 def editor_feedback(state: WritingState, config: dict):
     """ No-op node that should be interrupted on """
-    logger.info("Editor feedback")
+    logger.info("Editor's feedback")
     stream_writer = get_stream_writer()
     stream_writer({"custom_key": "*Editor is reading content...*\n"})
     google_api_key = config["configurable"]["google_api_key"]
 
     editor_instruction = load_prompt("editor_instruction")
-    system_message = editor_instruction.format(blog_post=state["blog_post"])
+    system_message = editor_instruction.format(content=state["content"])
     llm = get_gemma27b_llm(google_api_key=google_api_key)
     response = llm.invoke([HumanMessage(content=system_message)])
 
-    logger.info(f"Editor feedback: {response.content}")
+    logger.info(f"Editor's feedback: {response.content}")
     editor_message = HumanMessage(content=response.content)
     editor_message.name = "editor"
     stream_writer({"custom_key": "*Editor's feedback*:\n" + editor_message.content})
@@ -149,7 +149,7 @@ def refine_blog_post(state: WritingState, config: dict):
 
     logger.info(f"Refined content: {response.content}")
     stream_writer({"custom_key": "*Refined content*:\n" + response.content})
-    return {"blog_post": response.content, "messages": [response]}
+    return {"content": response.content, "messages": [response]}
 
 
 def writing_flow_control(state: WritingState, config: dict):
@@ -186,7 +186,7 @@ def generate_caption(state: WritingState, config: dict):
     stream_writer({"custom_key": "*Generating caption...*\n"})
 
     social_media_instruction = load_prompt("social_media_instruction")
-    system_message = social_media_instruction.format(blog_post=state["blog_post"])
+    system_message = social_media_instruction.format(blog_post=state["content"])
     llm = get_gemma12b_llm(google_api_key=google_api_key)
     response = llm.invoke([HumanMessage(content=system_message)])
     response.name = "Social Media Manager"
@@ -194,6 +194,14 @@ def generate_caption(state: WritingState, config: dict):
     logger.info(f"Caption: {response.content}")
     stream_writer({"custom_key": "*Caption*:\n" + response.content})
     return {"caption": response.content, "messages": [response]}
+
+
+def initiate_translation(state: GraphState, config: dict):
+    """ This is the "map" step where we run each translation sub-graph using Send API """
+
+    logger.info(f"Initiating translation")
+    
+    return [Send("translation_graph", {"content": state["content"]}), Send("translation_graph", {"content": state["caption"]})]
 
 
 def translate_content(state: TranslationState, config: dict):
@@ -205,7 +213,7 @@ def translate_content(state: TranslationState, config: dict):
     google_api_key = config["configurable"]["google_api_key"]
 
     translator_instruction = load_prompt("translator_instruction")
-    system_message = translator_instruction.format(content=state["blog_post"], target_language="Indonesian")
+    system_message = translator_instruction.format(content=state["content"], target_language="Indonesian")
     llm = get_gemma27b_llm(google_api_key=google_api_key)
     instruction = HumanMessage(content=system_message)
     response = llm.invoke([instruction])
@@ -233,4 +241,4 @@ def localize_content(state: TranslationState, config: dict):
 
     logger.info(f"Localized content: {response.content}")
     stream_writer({"custom_key": "*Localized content*:\n" + response.content})
-    return {"localized_content": response.content}
+    return {"localized_content": [response.content]}

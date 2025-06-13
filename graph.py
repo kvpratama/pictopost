@@ -18,7 +18,7 @@ def get_graph():
     builder.add_edge("image_processing", "human_context")
     builder.add_edge("human_context", "writing_graph")
     builder.add_edge("writing_graph", "human_content_feedback")
-    builder.add_edge("human_content_feedback", "translation_graph")
+    builder.add_conditional_edges("human_content_feedback", initiate_translation, ["translation_graph"])
     builder.add_edge("translation_graph", END)
 
     # Compile

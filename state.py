@@ -9,9 +9,10 @@ class GraphState(MessagesState):
     resized_images: Annotated[List[str], add]
     image_descriptions: Annotated[List[str], add]
     additional_context: str
-    blog_post: str
-    translated_content: str
-    localized_content: str
+    content: str
+    caption: str
+    # translated_content: str
+    localized_content: Annotated[List[str], add]
 
 class GraphStateInput(MessagesState):
     image_paths: Annotated[List[str], add]
@@ -21,9 +22,10 @@ class GraphStateOutput(MessagesState):
     resized_images: Annotated[List[str], add]
     image_descriptions: Annotated[List[str], add]
     additional_context: str
-    blog_post: str
-    translated_content: str
-    localized_content: str
+    content: str
+    caption: str
+    # translated_content: str
+    localized_content: Annotated[List[str], add]
 
 
 class ImageProcessingState(TypedDict):
@@ -43,7 +45,7 @@ class ImageProcessingStateOutput(TypedDict):
 class WritingState(MessagesState):
     image_descriptions: Annotated[List[str], add]
     additional_context: str
-    blog_post: str
+    content: str
     caption: str
 
 class WritingStateInput(MessagesState):
@@ -51,18 +53,17 @@ class WritingStateInput(MessagesState):
     additional_context: str
 
 class WritingStateOutput(MessagesState):
-    blog_post: str
+    content: str
     caption: str
 
 
 class TranslationState(MessagesState):
-    blog_post: str
+    content: str
     translated_content: str
-    localized_content: str
+    localized_content: Annotated[List[str], add]
 
 class TranslationStateInput(MessagesState):
-    blog_post: str
+    content: str
 
 class TranslationStateOutput(MessagesState):
-    translated_content: str
-    localized_content: str
+    localized_content: Annotated[List[str], add]
