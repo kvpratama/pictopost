@@ -23,7 +23,7 @@ def get_graph():
 
     # Compile
     memory = MemorySaver()
-    graph_memory = builder.compile(interrupt_after=['human_context', 'human_content_feedback'], checkpointer=memory)
+    graph_memory = builder.compile(interrupt_before=['human_content_feedback'], interrupt_after=['human_context'], checkpointer=memory)
     return graph_memory
 
 

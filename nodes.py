@@ -203,7 +203,8 @@ def initiate_translation(state: GraphState, config: dict):
 
     logger.info(f"Initiating translation")
     
-    return [Send("translation_graph", {"content": state["content"]}), Send("translation_graph", {"content": state["caption"]})]
+    return [Send("translation_graph", {"content": state["content"], "target_language": state["target_language"]}), 
+            Send("translation_graph", {"content": state["caption"], "target_language": state["target_language"]})]
 
 
 def translate_content(state: TranslationState, config: dict):
@@ -215,7 +216,7 @@ def translate_content(state: TranslationState, config: dict):
     google_api_key = config["configurable"]["google_api_key"]
 
     translator_instruction = load_prompt("translator_instruction")
-    system_message = translator_instruction.format(content=state["content"], target_language="Indonesian")
+    system_message = translator_instruction.format(content=state["content"], target_language=state["target_language"])
     llm = get_gemma27b_llm(google_api_key=google_api_key)
     instruction = HumanMessage(content=system_message)
     response = llm.invoke([instruction])
@@ -235,7 +236,7 @@ def localize_content(state: TranslationState, config: dict):
     google_api_key = config["configurable"]["google_api_key"]
 
     localized_instruction = load_prompt("localizer_instruction")
-    system_message = localized_instruction.format(translated_content=state["translated_content"], target_locale="Indonesian")
+    system_message = localized_instruction.format(translated_content=state["translated_content"], target_locale=state["target_language"])
     llm = get_gemma27b_llm(google_api_key=google_api_key)
     instruction = HumanMessage(content=system_message)
     response = llm.invoke([instruction])

@@ -95,9 +95,13 @@ else:
 
         # elif "localized_content" not in st.session_state["response"]:
         if not st.session_state["response"]["localized_content"]:
+            language = st.selectbox("Select Language", ["Indonesian", "Thailand", "Japanese", "Chinese", "Korean", "Spanish", "French"])
             if st.button("Translate Content"):
                 logger.info("Translating content...")
-                input_data = {}
+                input_data = {
+                    "target_language": language
+                }
+                logger.info(f"Input data: {input_data}")
                 with st.spinner("Translating content..."):
                     with st.container(height=300):
                         st.write_stream(st.session_state["client"].run_graph_stream(input_data=input_data, stream_mode="custom"))

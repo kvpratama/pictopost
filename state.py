@@ -11,7 +11,7 @@ class GraphState(MessagesState):
     additional_context: str
     content: str
     caption: str
-    # translated_content: str
+    target_language: str
     localized_content: Annotated[List[str], add]
 
 class GraphStateInput(MessagesState):
@@ -24,7 +24,6 @@ class GraphStateOutput(MessagesState):
     additional_context: str
     content: str
     caption: str
-    # translated_content: str
     localized_content: Annotated[List[str], add]
 
 
@@ -59,11 +58,13 @@ class WritingStateOutput(MessagesState):
 
 class TranslationState(MessagesState):
     content: str
+    target_language: str
     translated_content: str
     localized_content: Annotated[List[str], add]
 
 class TranslationStateInput(MessagesState):
     content: str
+    target_language: str
 
 class TranslationStateOutput(MessagesState):
     localized_content: Annotated[List[str], add]
