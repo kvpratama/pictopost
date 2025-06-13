@@ -107,12 +107,13 @@ def write_blog_post(state: WritingState, config: dict):
     blogger_instruction = load_prompt("blogger_instruction")
     system_message = blogger_instruction.format(images_description=images_description, additional_context=additional_context)
     llm = get_gemma12b_llm(google_api_key=google_api_key)
-    response = llm.invoke([HumanMessage(content=system_message)])
+    prompt = HumanMessage(content=system_message)
+    response = llm.invoke([prompt])
     response.name = "writer"
 
     logger.info(f"Blog post: {response.content}")
     stream_writer({"custom_key": "*Post written*:\n" + response.content})
-    return {"blog_post": response.content, "messages": [response]}
+    return {"blog_post": response.content, "messages": [prompt, response]}
 
 
 def editor_feedback(state: WritingState, config: dict):
@@ -170,11 +171,29 @@ def writing_flow_control(state: WritingState, config: dict):
     if num_responses >= max_num_turns:
         logger.info("Reached maximum number of turns")
         stream_writer({"custom_key": "*Reached maximum number of turns*\n *Finishing Writing Process...*\n"})
-        return "__end__"
+        return "generate_caption"
 
     logger.info("Continuing Writing Process")
     stream_writer({"custom_key": "*Continuing Writing Process...*\n"})
     return "editor_feedback"
+
+
+def generate_caption(state: WritingState, config: dict):
+    """ """
+    logger.info("Generating caption")
+    google_api_key = config["configurable"]["google_api_key"]
+    stream_writer = get_stream_writer()
+    stream_writer({"custom_key": "*Generating caption...*\n"})
+
+    social_media_instruction = load_prompt("social_media_instruction")
+    system_message = social_media_instruction.format(blog_post=state["blog_post"])
+    llm = get_gemma12b_llm(google_api_key=google_api_key)
+    response = llm.invoke([HumanMessage(content=system_message)])
+    response.name = "Social Media Manager"
+
+    logger.info(f"Caption: {response.content}")
+    stream_writer({"custom_key": "*Caption*:\n" + response.content})
+    return {"caption": response.content, "messages": [response]}
 
 
 def translate_content(state: TranslationState, config: dict):

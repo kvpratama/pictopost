@@ -44,6 +44,7 @@ class WritingState(MessagesState):
     image_descriptions: Annotated[List[str], add]
     additional_context: str
     blog_post: str
+    caption: str
 
 class WritingStateInput(MessagesState):
     image_descriptions: Annotated[List[str], add]
@@ -51,6 +52,7 @@ class WritingStateInput(MessagesState):
 
 class WritingStateOutput(MessagesState):
     blog_post: str
+    caption: str
 
 
 class TranslationState(MessagesState):

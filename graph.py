@@ -45,12 +45,14 @@ def get_writing_graph_builder():
     builder.add_node("write_blog_post", write_blog_post)
     builder.add_node("editor_feedback", editor_feedback)
     builder.add_node("refine_blog_post", refine_blog_post)
+    builder.add_node("generate_caption", generate_caption)
 
     # Logic
     builder.add_edge(START, "write_blog_post")
     builder.add_edge("write_blog_post", "editor_feedback")
     builder.add_edge("editor_feedback", "refine_blog_post")
-    builder.add_conditional_edges("refine_blog_post", writing_flow_control, ["editor_feedback", END])
+    builder.add_conditional_edges("refine_blog_post", writing_flow_control, ["editor_feedback", "generate_caption"])
+    builder.add_edge("generate_caption", END)
 
     return builder
 
