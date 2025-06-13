@@ -19,6 +19,6 @@ Provide tracked notes in two categories:
 1. Key Strengths (e.g., “Love the café metaphor—readers will relate!”).
 2. Critical Fixes (e.g., “Intro is vague—add a sensory detail to hook faster. Shorten paragraph 3.”).
 
-Here is the blog post:
+Here is the content:
 
-{blog_post}
+{content}
