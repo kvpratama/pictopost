@@ -16,9 +16,18 @@ Core Responsibilities:
 
 Feedback Format:
 Provide tracked notes in two categories:
-1. Key Strengths (e.g., “Love the café metaphor—readers will relate!”).
-2. Critical Fixes (e.g., “Intro is vague—add a sensory detail to hook faster. Shorten paragraph 3.”).
+1. Key Strengths
+2. Critical Fixes
 
 Here is the content:
 
 {content}
+
+Here is your previous feedback (if any):
+
+{prev_feedback}
+
+Review Previous Feedback (if provided):
+ - Check whether prior edits were addressed.
+ - If fixes were missed, note them under Critical Fixes without repeating past feedback.
+ - If all feedback was applied and no new issues exist, confirm: "Ready for publication."

@@ -123,8 +123,10 @@ def editor_feedback(state: WritingState, config: dict):
     stream_writer({"custom_key": "*Editor is reading content...*\n"})
     google_api_key = config["configurable"]["google_api_key"]
 
+    prev_feedback = '\n'.join([m.content for m in state["messages"] if m.name == "editor"])
+
     editor_instruction = load_prompt("editor_instruction")
-    system_message = editor_instruction.format(content=state["content"])
+    system_message = editor_instruction.format(content=state["content"], prev_feedback=prev_feedback)
     llm = get_gemma27b_llm(google_api_key=google_api_key)
     response = llm.invoke([HumanMessage(content=system_message)])
 
@@ -143,8 +145,8 @@ def refine_blog_post(state: WritingState, config: dict):
     stream_writer({"custom_key": "*Refining content based on editor's feedback...*\n"})
 
     llm = get_gemma12b_llm(google_api_key=google_api_key)
-    instruction = HumanMessage(content="Refine the blog post based on the editor's feedback")
-    response = llm.invoke(state["messages"] + [instruction])
+    # instruction = HumanMessage(content="Refine the blog post based on the editor's feedback")
+    response = llm.invoke(state["messages"])
     response.name = "refiner"
 
     logger.info(f"Refined content: {response.content}")
