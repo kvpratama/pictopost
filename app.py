@@ -19,6 +19,7 @@ if "client" not in st.session_state:
     google_api_key = os.getenv("GOOGLE_API_KEY")
     st.session_state["client"] = LangGraphLocalClient(google_api_key)
     st.session_state["response"] = None
+    st.session_state["images"] = []
 
 st.title("PicToPost")
 
@@ -34,6 +35,7 @@ if not st.session_state["response"]:
                 for uploaded_file in uploaded_files:
                     # Save uploaded file to a temporary file
                     with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_file.name)[1]) as tmp:
+                        logger.info(f"Saving temporary file: {tmp.name}")
                         tmp.write(uploaded_file.read())
                         paths.append(tmp.name)
             
@@ -43,17 +45,31 @@ if not st.session_state["response"]:
                     "max_size": 800,
                 }
                 st.session_state["response"] = st.session_state["client"].run_graph(input_data=input_data)
+                
+                for resized_path, temp_path in zip(st.session_state["response"]["resized_images"], paths):
+                    try:
+                        logger.info(f"Removing temporary file: {temp_path}")
+                        os.remove(temp_path)
+                    except Exception as e:
+                        logger.error(f"Failed to remove temporary file: {temp_path}")
+                        logger.error(str(e))
+                    
+                    st.session_state["images"].append(Image.open(resized_path).copy())
+                    try:
+                        logger.info(f"Removing resized image: {resized_path}")
+                        os.remove(resized_path)
+                    except Exception as e:
+                        logger.error(f"Failed to remove resized image: {resized_path}")
+                        logger.error(str(e))
             st.rerun()
     else:
         st.info("Please upload one or more images.")
 
 else:
     st.success(f"Processed {len(st.session_state["response"]["resized_images"])} image(s)")
-    resized_images = st.session_state["response"]["resized_images"]
     image_descriptions = st.session_state["response"]["image_descriptions"]
-    for idx, (img, desc) in enumerate(zip(resized_images, image_descriptions)):
+    for idx, (thumb, desc) in enumerate(zip(st.session_state["images"], image_descriptions)):
         col1, col2 = st.columns([1, 2])
-        thumb = Image.open(img)
         thumb.thumbnail((256, 256))
         col1.image(thumb, caption=f"Image {idx+1}", use_container_width=True)
         col2.markdown(desc)
