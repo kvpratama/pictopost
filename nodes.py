@@ -65,8 +65,13 @@ def resize_image(state: ImageProcessingState, config: dict):
 
 def describe_image(state: ImageProcessingState, config: dict):
     """
-    
+    Generates a textual description of a processed image using a language model.
+
+    This function reads the resized image, encodes it in base64,
+    and sends it along with predefined prompt instructions to a large language model (LLM)
+    to obtain a description. The description is returned in a dictionary format.
     """
+
     logger.info(f"Describing image: {state['resized_images'][0]}")
 
     # Initialize the Gemini model
@@ -96,7 +101,14 @@ def human_feedback(state: GraphState, config: dict):
 
 
 def write_blog_post(state: WritingState, config: dict):
-    """ """
+    """
+    Generates a blog post based on image descriptions and additional context using a language model.
+
+    This function takes previously generated image descriptions and human provided additional context, 
+    formats them into a prompt using a preloaded instruction template, and 
+    invokes a language model to generate a coherent blog post.
+    """
+
     logger.info("Writing blog post")
     stream_writer = get_stream_writer()
     stream_writer({"custom_key": "*Writing blog post...*\n"})
@@ -117,7 +129,14 @@ def write_blog_post(state: WritingState, config: dict):
 
 
 def editor_feedback(state: WritingState, config: dict):
-    """ No-op node that should be interrupted on """
+    """
+    Generates editorial feedback on blog content using a language model.
+
+    This function reviews the current blog post content, 
+    optionally considers any previous editor feedback, 
+    and prompts a language model to provide a new round of editorial suggestions.
+    """
+
     logger.info("Editor's feedback")
     stream_writer = get_stream_writer()
     stream_writer({"custom_key": "*Editor is reading content...*\n"})
@@ -138,7 +157,14 @@ def editor_feedback(state: WritingState, config: dict):
 
 
 def refine_blog_post(state: WritingState, config: dict):
-    """ """
+    """
+    Refines the blog post content using feedback from the editor via a language model.
+
+    This function takes the conversation history—including the original content and 
+    editor's feedback—from the state, and uses a language model to improve and rewrite 
+    the blog post accordingly.
+    """
+
     logger.info("Refining blog post")
     google_api_key = config["configurable"]["google_api_key"]
     stream_writer = get_stream_writer()
@@ -155,7 +181,15 @@ def refine_blog_post(state: WritingState, config: dict):
 
 
 def writing_flow_control(state: WritingState, config: dict):
-    """ """
+    """
+    Controls the flow of the blog writing process by deciding the next step based on the number of refinement iterations.
+
+    This function examines how many times the blog content has been refined (i.e., how many messages
+    from the "refiner" are present). If the number of refinement turns reaches or exceeds the
+    specified maximum (`max_num_turns`), it signals the end of the writing loop and proceeds to
+    the caption generation phase. Otherwise, it returns control to the editor feedback stage.
+    """
+
     logger.info("Writing flow control")
     stream_writer = get_stream_writer()
     stream_writer({"custom_key": "*Deciding on next step...*\n"})
@@ -181,7 +215,13 @@ def writing_flow_control(state: WritingState, config: dict):
 
 
 def generate_caption(state: WritingState, config: dict):
-    """ """
+    """ 
+    Generates a social media caption for a blog post using a language model.
+
+    This function takes the finalized blog post content from the state,
+    formats it with a predefined social media instruction prompt, and uses a language 
+    model to create a concise caption suitable for social media sharing.
+    """
     logger.info("Generating caption")
     google_api_key = config["configurable"]["google_api_key"]
     stream_writer = get_stream_writer()
@@ -208,7 +248,13 @@ def initiate_translation(state: GraphState, config: dict):
 
 
 def translate_content(state: TranslationState, config: dict):
-    """ """
+    """
+    Translates the provided content into a target language using a language model.
+
+    This function uses a predefined translation instruction, inserting the source content and
+    target language from the state, and invokes a language model to perform the translation.
+    """
+
     logger.info("Translating content")
     stream_writer = get_stream_writer()
     stream_writer({"custom_key": "*Translating content...*\n"})
@@ -228,7 +274,14 @@ def translate_content(state: TranslationState, config: dict):
 
 
 def localize_content(state: TranslationState, config: dict):
-    """ """
+    """
+    Localizes translated content for a specific regional or cultural context using a language model.
+
+    This function adjusts previously translated content to better fit the target locale, considering 
+    cultural norms, idioms, and regional preferences. It uses a localization prompt and invokes a 
+    language model to produce a culturally appropriate version of the text.
+    """
+    
     logger.info("Localizing content")
     stream_writer = get_stream_writer()
     stream_writer({"custom_key": "*Localizing content...*\n"})
