@@ -112,7 +112,7 @@ def write_blog_post(state: WritingState, config: dict):
     logger.info("Writing blog post")
     stream_writer = get_stream_writer()
     stream_writer({"custom_key": "*Writing blog post...*\n"})
-    images_description = "\n".join(state["image_descriptions"])
+    images_description = "\n".join(state["user_edited_image_descriptions"] if "user_edited_image_descriptions" in state else state["image_descriptions"])
     additional_context = state["additional_context"]
     google_api_key = config["configurable"]["google_api_key"]
 
