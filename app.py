@@ -20,6 +20,7 @@ if "client" not in st.session_state:
     st.session_state["client"] = LangGraphLocalClient(google_api_key)
     st.session_state["response"] = None
     st.session_state["images"] = []
+    st.session_state["writing_in_progress"] = False
 
 st.title("PicToPost")
 
@@ -45,6 +46,8 @@ if not st.session_state["response"]:
                     "max_size": 800,
                 }
                 st.session_state["response"] = st.session_state["client"].run_graph(input_data=input_data)
+                if "user_edited_image_descriptions" not in st.session_state["response"]:
+                    st.session_state["response"]["user_edited_image_descriptions"] = st.session_state["response"]["image_descriptions"]
                 
                 for resized_path, temp_path in zip(st.session_state["response"]["resized_images"], paths):
                     try:
@@ -67,26 +70,38 @@ if not st.session_state["response"]:
 
 else:
     st.success(f"Processed {len(st.session_state["response"]["resized_images"])} image(s)")
-    image_descriptions = st.session_state["response"]["image_descriptions"]
+    image_descriptions = st.session_state["response"]["user_edited_image_descriptions"]
     for idx, (thumb, desc) in enumerate(zip(st.session_state["images"], image_descriptions)):
         col1, col2 = st.columns([1, 2])
         thumb.thumbnail((256, 256))
         col1.image(thumb, caption=f"Image {idx+1}", use_container_width=True)
-        col2.markdown(desc)
+        st.session_state["response"]["user_edited_image_descriptions"][idx] = col2.text_area(
+            label=f"Image {idx+1} Description",
+            value=desc,
+            key=f"desc_{idx}",
+            disabled=st.session_state["writing_in_progress"] or ("content" in st.session_state["response"]),
+            height=250
+        )
+    text_area = st.text_area("Optional: Additional Context", "", key="additional_text" , disabled=st.session_state["writing_in_progress"] or ("content" in st.session_state["response"]))
     
     if "content" not in st.session_state["response"]:
-        text_area = st.text_area("Optional: Additional Context", "")
-        if st.button("Start Writing Process"):
-            logger.info("Starting writing process...")
-            input_data = {
-                "additional_context": text_area,
+        if st.button("Start Writing Process", disabled=st.session_state["writing_in_progress"]):
+            st.session_state["writing_in_progress"] = True
+            st.session_state["additional_context"] = text_area
+            st.rerun()
+    
+    if st.session_state["writing_in_progress"] and "content" not in st.session_state["response"]:
+        logger.info("Starting writing process...")
+        input_data = {
+            "additional_context": st.session_state["additional_context"],
+            "user_edited_image_descriptions": st.session_state["response"]["image_descriptions"],
         }
-            with st.spinner("Start writing process..."):
-                # st.session_state["response"] = st.session_state["client"].run_graph_resume(input_data=input_data)
-                with st.container(height=300):
-                    st.write_stream(st.session_state["client"].run_graph_stream(input_data=input_data, stream_mode="custom"))
-            st.session_state["response"] = st.session_state["client"].get_state()
-            # st.rerun()
+        with st.spinner("Start writing process..."):
+            with st.container(height=300):
+                st.write_stream(st.session_state["client"].run_graph_stream(input_data=input_data, stream_mode="custom"))
+        st.session_state["response"] = st.session_state["client"].get_state()
+        st.session_state["writing_in_progress"] = False
+        st.rerun()
     if "content" in st.session_state["response"] and st.session_state["response"]["content"]:
         with st.expander("Content"):
             st.markdown(st.session_state["response"]["content"])

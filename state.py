@@ -8,6 +8,7 @@ class GraphState(MessagesState):
     max_size: int
     resized_images: Annotated[List[str], add]
     image_descriptions: Annotated[List[str], add]
+    user_edited_image_descriptions: List[str]
     additional_context: str
     content: str
     caption: str
@@ -21,6 +22,7 @@ class GraphStateInput(MessagesState):
 class GraphStateOutput(MessagesState):
     resized_images: Annotated[List[str], add]
     image_descriptions: Annotated[List[str], add]
+    user_edited_image_descriptions: List[str]
     additional_context: str
     content: str
     caption: str
@@ -42,13 +44,13 @@ class ImageProcessingStateOutput(TypedDict):
 
 
 class WritingState(MessagesState):
-    image_descriptions: Annotated[List[str], add]
+    user_edited_image_descriptions: List[str]
     additional_context: str
     content: str
     caption: str
 
 class WritingStateInput(MessagesState):
-    image_descriptions: Annotated[List[str], add]
+    user_edited_image_descriptions: List[str]
     additional_context: str
 
 class WritingStateOutput(MessagesState):
