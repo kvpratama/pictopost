@@ -8,6 +8,7 @@ from PIL import Image
 from prompts import load_prompt
 import base64
 import pillow_heif  # Add HEIF support
+
 # Register HEIF plugin with PIL
 pillow_heif.register_heif_opener()
 from llm_model import get_gemma27b_llm, get_gemma12b_llm
@@ -17,18 +18,24 @@ logger = logging.getLogger(__name__)
 
 
 def initiate_image_processing(state: GraphState, config: dict):
-    """ This is the "map" step where we run each image processing sub-graph using Send API """
+    """This is the "map" step where we run each image processing sub-graph using Send API"""
 
     logger.info(f"Initiating image processing")
-    
-    return [Send("image_processing", {"image_path": image_path, "max_size": state["max_size"]}) for image_path in state["image_paths"]]
+
+    return [
+        Send(
+            "image_processing",
+            {"image_path": image_path, "max_size": state["max_size"]},
+        )
+        for image_path in state["image_paths"]
+    ]
 
 
 def resize_image(state: ImageProcessingState, config: dict):
     """
     Resize an image so that its longest side does not exceed a specified maximum size.
 
-    This function reads an image from the path specified in the `state` dictionary, 
+    This function reads an image from the path specified in the `state` dictionary,
     scales it proportionally so that its longest dimension matches `state["max_size"]`,
     and saves the resized image with "_resized" appended to the original filename.
 
@@ -56,11 +63,15 @@ def resize_image(state: ImageProcessingState, config: dict):
     new_height = int(original_height * scale)
 
     resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-    
+
     # save resized image using original filename
     resized_image.save(os.path.splitext(state["image_path"])[0] + "_resized.jpg")
-    logger.info(f"Resized image: {os.path.splitext(state["image_path"])[0] + "_resized.jpg"}")
-    return {"resized_images": [os.path.splitext(state["image_path"])[0] + "_resized.jpg"]}
+    logger.info(
+        f"Resized image: {os.path.splitext(state['image_path'])[0] + '_resized.jpg'}"
+    )
+    return {
+        "resized_images": [os.path.splitext(state["image_path"])[0] + "_resized.jpg"]
+    }
 
 
 def describe_image(state: ImageProcessingState, config: dict):
@@ -85,17 +96,20 @@ def describe_image(state: ImageProcessingState, config: dict):
     message_local = HumanMessage(
         content=[
             {"type": "text", "text": image_description_instructions},
-            {"type": "image_url", "image_url": f"data:image/jpeg;base64,{encoded_image}"}
+            {
+                "type": "image_url",
+                "image_url": f"data:image/jpeg;base64,{encoded_image}",
+            },
         ]
     )
 
     response = llm.invoke([message_local])
     logger.info(f"Image description: {response.content}")
     return {"image_descriptions": [response.content]}
-    
+
 
 def human_feedback(state: GraphState, config: dict):
-    """ No-op node that should be interrupted on """
+    """No-op node that should be interrupted on"""
     logger.info("Human feedback")
     pass
 
@@ -104,20 +118,26 @@ def write_blog_post(state: WritingState, config: dict):
     """
     Generates a blog post based on image descriptions and additional context using a language model.
 
-    This function takes previously generated image descriptions and human provided additional context, 
-    formats them into a prompt using a preloaded instruction template, and 
+    This function takes previously generated image descriptions and human provided additional context,
+    formats them into a prompt using a preloaded instruction template, and
     invokes a language model to generate a coherent blog post.
     """
 
     logger.info("Writing blog post")
     stream_writer = get_stream_writer()
     stream_writer({"custom_key": "*Writing blog post...*\n"})
-    images_description = "\n".join(state["user_edited_image_descriptions"] if "user_edited_image_descriptions" in state else state["image_descriptions"])
+    images_description = "\n".join(
+        state["user_edited_image_descriptions"]
+        if "user_edited_image_descriptions" in state
+        else state["image_descriptions"]
+    )
     additional_context = state["additional_context"]
     google_api_key = config["configurable"]["google_api_key"]
 
     blogger_instruction = load_prompt("blogger_instruction")
-    system_message = blogger_instruction.format(images_description=images_description, additional_context=additional_context)
+    system_message = blogger_instruction.format(
+        images_description=images_description, additional_context=additional_context
+    )
     llm = get_gemma12b_llm(google_api_key=google_api_key)
     prompt = HumanMessage(content=system_message)
     response = llm.invoke([prompt])
@@ -132,8 +152,8 @@ def editor_feedback(state: WritingState, config: dict):
     """
     Generates editorial feedback on blog content using a language model.
 
-    This function reviews the current blog post content, 
-    optionally considers any previous editor feedback, 
+    This function reviews the current blog post content,
+    optionally considers any previous editor feedback,
     and prompts a language model to provide a new round of editorial suggestions.
     """
 
@@ -142,10 +162,14 @@ def editor_feedback(state: WritingState, config: dict):
     stream_writer({"custom_key": "*Editor is reading content...*\n"})
     google_api_key = config["configurable"]["google_api_key"]
 
-    prev_feedback = '\n'.join([m.content for m in state["messages"] if m.name == "editor"])
+    prev_feedback = "\n".join(
+        [m.content for m in state["messages"] if m.name == "editor"]
+    )
 
     editor_instruction = load_prompt("editor_instruction")
-    system_message = editor_instruction.format(content=state["content"], prev_feedback=prev_feedback)
+    system_message = editor_instruction.format(
+        content=state["content"], prev_feedback=prev_feedback
+    )
     llm = get_gemma27b_llm(google_api_key=google_api_key)
     response = llm.invoke([HumanMessage(content=system_message)])
 
@@ -160,8 +184,8 @@ def refine_blog_post(state: WritingState, config: dict):
     """
     Refines the blog post content using feedback from the editor via a language model.
 
-    This function takes the conversation history—including the original content and 
-    editor's feedback—from the state, and uses a language model to improve and rewrite 
+    This function takes the conversation history—including the original content and
+    editor's feedback—from the state, and uses a language model to improve and rewrite
     the blog post accordingly.
     """
 
@@ -195,18 +219,24 @@ def writing_flow_control(state: WritingState, config: dict):
     stream_writer({"custom_key": "*Deciding on next step...*\n"})
 
     messages = state["messages"]
-    max_num_turns = state.get('max_num_turns', 2)
+    max_num_turns = state.get("max_num_turns", 2)
 
     num_responses = len(
-            [m for m in messages if isinstance(m, AIMessage) and m.name == "refiner"]
-        )
+        [m for m in messages if isinstance(m, AIMessage) and m.name == "refiner"]
+    )
 
     logger.info(f"Number of responses: {num_responses}/{max_num_turns}")
-    stream_writer({"custom_key": f"*Number of responses: {num_responses}/{max_num_turns}*\n"})
+    stream_writer(
+        {"custom_key": f"*Number of responses: {num_responses}/{max_num_turns}*\n"}
+    )
 
     if num_responses >= max_num_turns:
         logger.info("Reached maximum number of turns")
-        stream_writer({"custom_key": "*Reached maximum number of turns*\n *Finishing Writing Process...*\n"})
+        stream_writer(
+            {
+                "custom_key": "*Reached maximum number of turns*\n *Finishing Writing Process...*\n"
+            }
+        )
         return "generate_caption"
 
     logger.info("Continuing Writing Process")
@@ -215,11 +245,11 @@ def writing_flow_control(state: WritingState, config: dict):
 
 
 def generate_caption(state: WritingState, config: dict):
-    """ 
+    """
     Generates a social media caption for a blog post using a language model.
 
     This function takes the finalized blog post content from the state,
-    formats it with a predefined social media instruction prompt, and uses a language 
+    formats it with a predefined social media instruction prompt, and uses a language
     model to create a concise caption suitable for social media sharing.
     """
     logger.info("Generating caption")
@@ -239,12 +269,20 @@ def generate_caption(state: WritingState, config: dict):
 
 
 def initiate_translation(state: GraphState, config: dict):
-    """ This is the "map" step where we run each translation sub-graph using Send API """
+    """This is the "map" step where we run each translation sub-graph using Send API"""
 
     logger.info(f"Initiating translation")
-    
-    return [Send("translation_graph", {"content": state["content"], "target_language": state["target_language"]}), 
-            Send("translation_graph", {"content": state["caption"], "target_language": state["target_language"]})]
+
+    return [
+        Send(
+            "translation_graph",
+            {"content": state["content"], "target_language": state["target_language"]},
+        ),
+        Send(
+            "translation_graph",
+            {"content": state["caption"], "target_language": state["target_language"]},
+        ),
+    ]
 
 
 def translate_content(state: TranslationState, config: dict):
@@ -262,7 +300,9 @@ def translate_content(state: TranslationState, config: dict):
     google_api_key = config["configurable"]["google_api_key"]
 
     translator_instruction = load_prompt("translator_instruction")
-    system_message = translator_instruction.format(content=state["content"], target_language=state["target_language"])
+    system_message = translator_instruction.format(
+        content=state["content"], target_language=state["target_language"]
+    )
     llm = get_gemma27b_llm(google_api_key=google_api_key)
     instruction = HumanMessage(content=system_message)
     response = llm.invoke([instruction])
@@ -277,11 +317,11 @@ def localize_content(state: TranslationState, config: dict):
     """
     Localizes translated content for a specific regional or cultural context using a language model.
 
-    This function adjusts previously translated content to better fit the target locale, considering 
-    cultural norms, idioms, and regional preferences. It uses a localization prompt and invokes a 
+    This function adjusts previously translated content to better fit the target locale, considering
+    cultural norms, idioms, and regional preferences. It uses a localization prompt and invokes a
     language model to produce a culturally appropriate version of the text.
     """
-    
+
     logger.info("Localizing content")
     stream_writer = get_stream_writer()
     stream_writer({"custom_key": "*Localizing content...*\n"})
@@ -289,7 +329,10 @@ def localize_content(state: TranslationState, config: dict):
     google_api_key = config["configurable"]["google_api_key"]
 
     localized_instruction = load_prompt("localizer_instruction")
-    system_message = localized_instruction.format(translated_content=state["translated_content"], target_locale=state["target_language"])
+    system_message = localized_instruction.format(
+        translated_content=state["translated_content"],
+        target_locale=state["target_language"],
+    )
     llm = get_gemma27b_llm(google_api_key=google_api_key)
     instruction = HumanMessage(content=system_message)
     response = llm.invoke([instruction])

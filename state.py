@@ -3,6 +3,7 @@ from typing import TypedDict
 from operator import add
 from typing import List, Annotated
 
+
 class GraphState(MessagesState):
     image_paths: Annotated[List[str], add]
     max_size: int
@@ -15,9 +16,11 @@ class GraphState(MessagesState):
     target_language: str
     localized_content: Annotated[List[str], add]
 
+
 class GraphStateInput(MessagesState):
     image_paths: Annotated[List[str], add]
     max_size: int
+
 
 class GraphStateOutput(MessagesState):
     resized_images: Annotated[List[str], add]
@@ -34,9 +37,11 @@ class ImageProcessingState(TypedDict):
     max_size: int
     resized_images: List[str]
 
+
 class ImageProcessingStateInput(TypedDict):
     image_path: str
     max_size: int
+
 
 class ImageProcessingStateOutput(TypedDict):
     resized_images: List[str]
@@ -49,9 +54,11 @@ class WritingState(MessagesState):
     content: str
     caption: str
 
+
 class WritingStateInput(MessagesState):
     user_edited_image_descriptions: List[str]
     additional_context: str
+
 
 class WritingStateOutput(MessagesState):
     content: str
@@ -64,9 +71,11 @@ class TranslationState(MessagesState):
     translated_content: str
     localized_content: Annotated[List[str], add]
 
+
 class TranslationStateInput(MessagesState):
     content: str
     target_language: str
+
 
 class TranslationStateOutput(MessagesState):
     localized_content: Annotated[List[str], add]
