@@ -139,7 +139,7 @@ else:
             "persona_name": st.session_state["persona_name"],
             "additional_context": st.session_state["additional_context"],
             "user_edited_image_descriptions": st.session_state["response"][
-                "image_descriptions"
+                "user_edited_image_descriptions"
             ],
         }
         with st.spinner("Start writing process..."):
