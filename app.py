@@ -103,6 +103,16 @@ else:
                 height=250,
             )
         )
+
+    # select persona
+    select_persona = st.selectbox(
+        "Select Persona",
+        # List of personas come from persona directory
+        [f[:-4] for f in os.listdir("persona") if f.endswith(".txt")],
+        key="select_persona",
+        disabled=st.session_state["writing_in_progress"]
+        or ("content" in st.session_state["response"]),
+    )
     text_area = st.text_area(
         "Optional: Additional Context",
         "",
@@ -117,6 +127,7 @@ else:
         ):
             st.session_state["writing_in_progress"] = True
             st.session_state["additional_context"] = text_area
+            st.session_state["persona_name"] = select_persona
             st.rerun()
 
     if (
@@ -125,6 +136,7 @@ else:
     ):
         logger.info("Starting writing process...")
         input_data = {
+            "persona_name": st.session_state["persona_name"],
             "additional_context": st.session_state["additional_context"],
             "user_edited_image_descriptions": st.session_state["response"][
                 "image_descriptions"
