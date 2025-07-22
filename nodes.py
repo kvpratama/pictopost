@@ -5,13 +5,13 @@ import time
 from langchain_core.messages import AnyMessage, HumanMessage, AIMessage, SystemMessage
 from state import GraphState, ImageProcessingState, WritingState, TranslationState
 from PIL import Image
-from prompts import load_prompt
+from prompts import load_prompt, load_persona
 import base64
 import pillow_heif  # Add HEIF support
 
 # Register HEIF plugin with PIL
 pillow_heif.register_heif_opener()
-from llm_model import get_gemma27b_llm, get_gemma12b_llm
+from llm_model import get_gemma27b_llm, get_gemma12b_llm, get_creative_llm
 from langgraph.config import get_stream_writer
 
 logger = logging.getLogger(__name__)
@@ -126,26 +126,34 @@ def write_blog_post(state: WritingState, config: dict):
     logger.info("Writing blog post")
     stream_writer = get_stream_writer()
     stream_writer({"custom_key": "*Writing blog post...*\n"})
+
+    persona_name = state["persona_name"]
+    persona = load_persona(persona_name)
+
     images_description = "\n".join(
         state["user_edited_image_descriptions"]
         if "user_edited_image_descriptions" in state
         else state["image_descriptions"]
     )
+
     additional_context = state["additional_context"]
     google_api_key = config["configurable"]["google_api_key"]
 
     blogger_instruction = load_prompt("blogger_instruction")
-    system_message = blogger_instruction.format(
-        images_description=images_description, additional_context=additional_context
+    human_message = blogger_instruction.format(
+        persona=persona,
+        images_description=images_description,
+        additional_context=additional_context,
     )
-    llm = get_gemma12b_llm(google_api_key=google_api_key)
-    prompt = HumanMessage(content=system_message)
-    response = llm.invoke([prompt])
+
+    llm = get_creative_llm(google_api_key=google_api_key)
+    prompt = [SystemMessage(content=persona), HumanMessage(content=human_message)]
+    response = llm.invoke(prompt)
     response.name = "writer"
 
     logger.info(f"Content: {response.content}")
     stream_writer({"custom_key": "*Content written*:\n" + response.content})
-    return {"content": response.content, "messages": [prompt, response]}
+    return {"content": response.content, "messages": prompt + [response]}
 
 
 def editor_feedback(state: WritingState, config: dict):
@@ -194,8 +202,7 @@ def refine_blog_post(state: WritingState, config: dict):
     stream_writer = get_stream_writer()
     stream_writer({"custom_key": "*Refining content based on editor's feedback...*\n"})
 
-    llm = get_gemma12b_llm(google_api_key=google_api_key)
-    # instruction = HumanMessage(content="Refine the blog post based on the editor's feedback")
+    llm = get_creative_llm(google_api_key=google_api_key)
     response = llm.invoke(state["messages"])
     response.name = "refiner"
 

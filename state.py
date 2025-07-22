@@ -10,6 +10,7 @@ class GraphState(MessagesState):
     resized_images: Annotated[List[str], add]
     image_descriptions: Annotated[List[str], add]
     user_edited_image_descriptions: List[str]
+    persona_name: str
     additional_context: str
     content: str
     caption: str
@@ -27,6 +28,7 @@ class GraphStateOutput(MessagesState):
     image_descriptions: Annotated[List[str], add]
     user_edited_image_descriptions: List[str]
     additional_context: str
+    persona_name: str
     content: str
     caption: str
     localized_content: Annotated[List[str], add]
@@ -49,6 +51,7 @@ class ImageProcessingStateOutput(TypedDict):
 
 
 class WritingState(MessagesState):
+    persona_name: str
     user_edited_image_descriptions: List[str]
     additional_context: str
     content: str
@@ -58,6 +61,7 @@ class WritingState(MessagesState):
 class WritingStateInput(MessagesState):
     user_edited_image_descriptions: List[str]
     additional_context: str
+    persona_name: str
 
 
 class WritingStateOutput(MessagesState):
