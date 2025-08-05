@@ -23,6 +23,7 @@ if "client" not in st.session_state:
     st.session_state["response"] = None
     st.session_state["images"] = []
     st.session_state["writing_in_progress"] = False
+    st.session_state["translating_in_progress"] = False
 
 st.title("PicToPost")
 
@@ -174,9 +175,13 @@ else:
                     "Spanish",
                     "French",
                 ],
+                disabled=st.session_state["translating_in_progress"]
             )
-            if st.button("Translate Content"):
+            if st.button("Translate Content", disabled=st.session_state["translating_in_progress"]):
                 logger.info("Translating content...")
+                st.session_state["translating_in_progress"] = True
+                st.rerun()
+            if st.session_state["translating_in_progress"]:
                 input_data = {"target_language": language}
                 logger.info(f"Input data: {input_data}")
                 with st.spinner("Translating content..."):
